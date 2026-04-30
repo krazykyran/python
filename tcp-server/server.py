@@ -12,7 +12,7 @@ active_lock = threading.Lock()
 quit_flag = False
 
 
-def send_console_to_client():
+def console_input():
     global active_socket, quit_flag
     while True:
         try:
@@ -76,7 +76,7 @@ with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as server_socket:
     server_socket.listen(1)
     print(f"TCP echo server listening on {HOST}:{PORT}")
 
-    console_thread = threading.Thread(target=send_console_to_client, daemon=True)
+    console_thread = threading.Thread(target=console_input, daemon=True)
     console_thread.start()
 
     while not quit_flag:
