@@ -8,7 +8,7 @@ PORT = 5051
 
 last_client_addr = None
 quit_flag = False
-lock = threading.Lock()
+active_lock = threading.Lock()
 single_client_set = False
 period_count = 0
 
@@ -25,11 +25,11 @@ def console_input():
 
         if text.strip().lower() == "quit":
             print("Quit command received from console. Exiting.")
-            with lock:
+            with active_lock:
                 quit_flag = True
             break
 
-        with lock:
+        with active_lock:
             if last_client_addr is None:
                 print("No client address known to send message to.")
                 continue
@@ -55,7 +55,7 @@ while not quit_flag:
     try:
         data, addr = sock.recvfrom(1024)
     except socket.timeout:
-        with lock:
+        with active_lock:
             if single_client_set:
                 period_count += 1
                 if period_count >= 5:
@@ -73,7 +73,7 @@ while not quit_flag:
         continue
     except OSError:
         break
-    with lock:
+    with active_lock:
         if not single_client_set:
             last_client_addr = addr
             single_client_set = True
@@ -89,7 +89,7 @@ while not quit_flag:
             print(f"Failed to send hello world!: {exc}")
     message = data.decode("utf-8", errors="replace").rstrip("\n")
     print(f"Received from {addr}: {message}")
-    with lock:
+    with active_lock:
         period_count = 0
     if not message:
         print(f"Empty message received from {addr}. Disconnecting client.")
@@ -98,7 +98,7 @@ while not quit_flag:
             print("Sent NULL back to client.")
         except OSError as exc:
             print(f"Failed to send NULL: {exc}")
-        with lock:
+        with active_lock:
             single_client_set = False
             last_client_addr = None
             hello_printed = False
